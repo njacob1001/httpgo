@@ -102,8 +102,8 @@ func main() {
 		CREATE TABLE IF NOT EXISTS
 		data (
 			id SERIAL PRIMARY KEY,
-			temperatura numeric DEFAULT 0.0
-			humedad numeric DEFAULT 0.0
+			temperatura numeric DEFAULT 0.0,
+			humedad numeric DEFAULT 0.0,
 			fecha TIMESTAMP DEFAULT NOW() 
 		)
 	`
