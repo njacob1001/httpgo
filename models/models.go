@@ -3,8 +3,6 @@ package models
 import (
 	"fmt"
 	"log"
-
-	"github.com/lib/pq"
 )
 
 // WeatherInfoRequest for the struct
@@ -31,11 +29,18 @@ type FullResponse struct {
 // GetData function
 func (db *DB) GetData() (FullResponse, error) {
 	var allData []WeatherInfoRequest
-	rows, err := db.Query("SELECT * FROM data", pq.Array(allData))
+	rows, err := db.Query("SELECT * FROM data")
 	fmt.Println(rows)
 	fmt.Println(allData)
 	if err != nil {
 		log.Fatal(err)
+	}
+	count := 0
+	for rows.Next() {
+		if err := rows.Scan(&allData[count]); err != nil {
+			log.Fatal(err)
+		}
+		count++
 	}
 
 	defer rows.Close()
