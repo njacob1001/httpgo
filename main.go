@@ -101,7 +101,7 @@ func (env *Env) handleWeather(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db, err := models.NewDB("postgresql://postgres@localhost:26257/redesuao?ssl=false&sslmode=disable&password=worker")
+	db, err := models.NewDB("postgresql://postgres@localhost:5432/redesuao?ssl=false&sslmode=disable&password=worker")
 
 	if err != nil {
 		panic(err)
