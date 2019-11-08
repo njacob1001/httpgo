@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi"
 	_ "github.com/lib/pq"
+	"github.com/njacob1001/httpgo/models"
 )
 
 const (
@@ -18,6 +19,16 @@ const (
 	password = "worker"
 	dbname   = "redesuao"
 )
+
+// DB database
+type DB struct {
+	*sql.DB
+}
+
+// Env estruct
+type Env struct {
+	db models.Datastore
+}
 
 // Response respuesta de la api
 type Response struct {
@@ -34,7 +45,7 @@ type TotalResponse struct {
 
 var global Response
 
-func handleGet(w http.ResponseWriter, r *http.Request) {
+func (env *Env) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(global)
 	if err != nil {
@@ -46,7 +57,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) {
+func (env *Env) handlePost(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&global); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -61,7 +72,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func handleWeather(w http.ResponseWriter, r *http.Request) {
+func (env *Env) handleWeather(w http.ResponseWriter, r *http.Request) {
 	temp := "frio"
 	humedad := "seco"
 
@@ -90,49 +101,14 @@ func handleWeather(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := models.NewDB("postgresql://postgres@localhost:26257/redesuao?ssl=false&sslmode=disable&password=worker")
+
 	if err != nil {
 		panic(err)
 	}
 
-	initializeTable := `
-		CREATE TABLE IF NOT EXISTS
-		data (
-			id SERIAL PRIMARY KEY,
-			temperatura numeric DEFAULT 0.0,
-			humedad numeric DEFAULT 0.0,
-			fecha TIMESTAMP DEFAULT NOW() 
-		)
-	`
-
-	defaultValue := `
-		INSERT INTO 
-		data 
-		(temperatura, humedad, fecha) 
-		VALUES 
-		(1.2, 3.4, '2017-03-31 09:30:20-07')
-		ON CONFLICT DO NOTHING
-	`
-
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-
-	if _, err := db.Exec(initializeTable); err != nil {
-		panic(err)
-	}
-
-	if _, err := db.Exec(defaultValue); err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Successfully connected!")
+	env := &Env{db: db}
+	// defer db.Close()
 
 	r := chi.NewRouter()
 	s := &http.Server{
@@ -142,8 +118,9 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	r.Get("/restserver/app/ws", handleGet)
-	r.Post("/restserver/app/ws", handlePost)
-	r.Get("/restserver/app/weather", handleWeather)
+	r.Get("/restserver/app/ws", env.handleGet)
+	r.Post("/restserver/app/ws", env.handlePost)
+	r.Get("/restserver/app/weather", env.handleWeather)
 	s.ListenAndServe()
+	fmt.Println("Successfully connected!")
 }
