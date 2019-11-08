@@ -46,8 +46,19 @@ type TotalResponse struct {
 var global Response
 
 func (env *Env) handleGet(w http.ResponseWriter, r *http.Request) {
+	resp, err := env.db.GetData()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	js, err := json.Marshal(global)
+	// js, err := json.Marshal(global)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	js, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
