@@ -32,6 +32,7 @@ type FullResponse struct {
 func (db *DB) GetData() (FullResponse, error) {
 	var allData []WeatherInfoRequest
 	rows, err := db.Query("SELECT * FROM data", pq.Array(allData))
+	fmt.Println(rows)
 	if err != nil {
 		log.Fatal(err)
 	}
