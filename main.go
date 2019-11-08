@@ -1,11 +1,22 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
+	_ "github.com/lib/pq"
+)
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "worker"
+	dbname   = "redesuao"
 )
 
 // Response respuesta de la api
@@ -79,6 +90,22 @@ func handleWeather(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Successfully connected!")
+
 	r := chi.NewRouter()
 	s := &http.Server{
 		Addr:           ":80",
@@ -92,5 +119,3 @@ func main() {
 	r.Get("/restserver/app/weather", handleWeather)
 	s.ListenAndServe()
 }
-
-
