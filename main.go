@@ -97,10 +97,38 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	initializeTable := `
+		CREATE TABLE IF NOT EXISTS
+		data (
+			id SERIAL PRIMARY KEY,
+			temperatura numeric DEFAULT 0.0
+			humedad numeric DEFAULT 0.0
+			fecha TIMESTAMP DEFAULT NOW() 
+		)
+	`
+
+	defaultValue := `
+		INSERT INTO 
+		data 
+		(temperatura, humedad, fecha) 
+		VALUES 
+		(1.2, 3.4, '2017-03-31 09:30:20-07')
+		ON CONFLICT DO NOTHING
+	`
+
 	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
+		panic(err)
+	}
+
+	if _, err := db.Exec(initializeTable); err != nil {
+		panic(err)
+	}
+
+	if _, err := db.Exec(defaultValue); err != nil {
 		panic(err)
 	}
 
