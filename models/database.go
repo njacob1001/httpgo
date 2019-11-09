@@ -7,7 +7,7 @@ import (
 
 // Datastore interface
 type Datastore interface {
-	GetData() (FullResponse, error)
+	GetData() ([]*WeatherInfoRequest, error)
 	InsertData(domain *WeatherInfo) error
 }
 
