@@ -84,7 +84,7 @@ func (db *DB) GetData() ([]*WeatherInfoRequest, error) {
 func (db *DB) InsertData(temp string, humed string) error {
 	_, err := db.Exec(`
 		INSERT INTO data (temperatura, humedad)  VALUES (
-			$1, $2, $3
+			$1, $2
 		)
 	`, temp, humed)
 	if err != nil {
