@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -27,38 +26,58 @@ type FullResponse struct {
 }
 
 // GetData function
-func (db *DB) GetData() (FullResponse, error) {
-	var allData []WeatherInfoRequest
+func (db *DB) GetData() ([]*WeatherInfoRequest, error) {
 	rows, err := db.Query("SELECT * FROM data")
-	fmt.Println(rows)
-	fmt.Println(allData)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	for rows.Next() {
-		if err := rows.Scan(&allData); err != nil {
-			log.Fatal(err)
-		}
-	}
-
 	defer rows.Close()
-	response := FullResponse{
-		Status: "ok",
-		Data:   allData,
-	}
-	// iterate over the result and print out the titles
+
+	servers := make([]*WeatherInfoRequest, 0)
 	for rows.Next() {
-		var title string
-		if err := rows.Scan(&title); err != nil {
+		server := new(WeatherInfoRequest)
+		err := rows.Scan(&server.ID, &server.Temperatura, &server.Humedad, &server.Fecha)
+		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(title)
+		servers = append(servers, server)
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Fatal(err)
 	}
-	return response, err
+
+	// var allData []WeatherInfoRequest
+	// rows, err := db.Query("SELECT * FROM data")
+	// fmt.Println(rows)
+	// fmt.Println(allData)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// for rows.Next() {
+	// 	if err := rows.Scan(&allData); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// }
+
+	// defer rows.Close()
+	// response := FullResponse{
+	// 	Status: "ok",
+	// 	Data:   servers,
+	// }
+	// // iterate over the result and print out the titles
+	// for rows.Next() {
+	// 	var title string
+	// 	if err := rows.Scan(&title); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	fmt.Println(title)
+	// }
+	// if err := rows.Err(); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// return response, err
+	return servers, nil
 }
 
 // InsertData function
