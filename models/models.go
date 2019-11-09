@@ -81,12 +81,12 @@ func (db *DB) GetData() ([]*WeatherInfoRequest, error) {
 }
 
 // InsertData function
-func (db *DB) InsertData(info *WeatherInfo) error {
+func (db *DB) InsertData(temp string, humed string) error {
 	_, err := db.Exec(`
 		INSERT INTO data (temperatura, humedad)  VALUES (
 			$1, $2, $3
 		)
-	`, info.Temperatura, info.Humedad)
+	`, temp, humed)
 	if err != nil {
 		log.Println(err)
 	}

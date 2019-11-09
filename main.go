@@ -78,6 +78,11 @@ func (env *Env) handlePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	errr := env.db.InsertData(fmt.Sprintf("%f", global.Temperatura), fmt.Sprintf("%f", global.Humedad))
+	if errr != nil {
+		http.Error(w, errr.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 	return
