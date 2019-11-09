@@ -35,12 +35,11 @@ func (db *DB) GetData() (FullResponse, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	count := 0
+
 	for rows.Next() {
-		if err := rows.Scan(&allData[count]); err != nil {
+		if err := rows.Scan(&allData); err != nil {
 			log.Fatal(err)
 		}
-		count++
 	}
 
 	defer rows.Close()
