@@ -14,6 +14,7 @@ import (
 type Datastore interface {
 	GetData() ([]*Basura, error)
 	GetDataBy(isUrgent bool) ([]*Basura, error)
+	InsertData(info *BasuraFromArduino) error
 	// InsertData(temp string, humed string) error
 }
 

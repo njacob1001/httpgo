@@ -24,6 +24,11 @@ type Env struct {
 	db models.Datastore
 }
 
+// RespOk struct
+type Respok struct {
+	Ok bool `json:"ok"`
+}
+
 // Response respuesta de la api
 type Response struct {
 	Temperatura float32 `json:"temperatura"`
@@ -40,7 +45,14 @@ type TotalResponse struct {
 var global Response
 
 func (env *Env) handleGet(w http.ResponseWriter, r *http.Request) {
-	resp, err := env.db.GetDataBy(false)
+	searchType := chi.URLParam(r, "type")
+	var resp []*models.Basura
+	var err error
+	if searchType == "urgent" {
+		resp, err = env.db.GetDataBy(true)
+	} else {
+		resp, err = env.db.GetDataBy(false)
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,22 +75,31 @@ func (env *Env) handleGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *Env) handlePost(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewDecoder(r.Body).Decode(&global); err != nil {
+	var Body models.BasuraFromArduino
+	if err := json.NewDecoder(r.Body).Decode(&Body); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	err := env.db.InsertData(&Body)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	// js, err := json.Marshal(global)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	respuesta := Respok{
+		Ok: true,
+	}
+
+	js, err := json.Marshal(respuesta)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// errr := env.db.InsertData(fmt.Sprintf("%f", global.Temperatura), fmt.Sprintf("%f", global.Humedad))
 	// if errr != nil {
 	// 	http.Error(w, errr.Error(), http.StatusInternalServerError)
 	// 	return
 	// }
-	// w.Header().Set("Content-Type", "application/json")
-	// w.Write("")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 	return
 }
 
@@ -128,9 +149,11 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	r.Get("/restserver/app/ws", env.handleGet)
-	r.Post("/restserver/app/ws", env.handlePost)
-	r.Get("/restserver/app/weather", env.handleWeather)
+	// r.Get("/api/get", env.handleGet)
+	r.Get("/api/datos/{type}", env.handleGet)
+	r.Post("/api/insert", env.handlePost)
+	// r.Post("/restserver/app/ws", env.handlePost)
+	// r.Get("/restserver/app/weather", env.handleWeather)
 	s.ListenAndServe()
 	fmt.Println("Successfully connected!")
 }

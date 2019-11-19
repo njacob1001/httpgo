@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"log"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,11 +30,18 @@ type FullResponse struct {
 	Data   []WeatherInfoRequest `json:"data"`
 }
 
+// BasuraFromArduino struct
+type BasuraFromArduino struct {
+	Nocivo        bool    `json:"nocivo"`
+	Identificador string  `json:"identificador"`
+	Peso          float32 `json:"peso"`
+}
+
 // Basura struct
 type Basura struct {
 	Identificador string  `json:"identificador"`
 	Peso          float32 `json:"peso"`
-	Gas           float32 `json:"gas"`
+	Nocivo        bool    `json:"nocivo"`
 	Timestamp     string  `json:"timestamp"`
 	Grado         string  `json:"grado"`
 }
@@ -71,7 +79,7 @@ func (db *MDB) GetDataBy(isUrgent bool) ([]*Basura, error) {
 		"grado",
 		bson.D{{
 			"$in",
-			bson.A{"urgente"},
+			bson.A{"recoger"},
 		}},
 	}}
 	if isUrgent {
@@ -79,7 +87,7 @@ func (db *MDB) GetDataBy(isUrgent bool) ([]*Basura, error) {
 			"grado",
 			bson.D{{
 				"$in",
-				bson.A{"recoger"},
+				bson.A{"urgente"},
 			}},
 		}}
 	}
@@ -100,6 +108,30 @@ func (db *MDB) GetDataBy(isUrgent bool) ([]*Basura, error) {
 		results = append(results, &elem)
 	}
 	return results, nil
+}
+
+// InsertData function
+func (db *MDB) InsertData(info *BasuraFromArduino) error {
+	typeData := "no recoger"
+	t := time.Now()
+	stringTime := t.Format("2006-01-02T15:04:05-0700")
+	if info.Nocivo || info.Peso > 5000 {
+		typeData = "urgente"
+	} else if info.Peso > 2000 && info.Peso <= 5000 {
+		typeData = "recoger"
+	}
+	toSave := Basura{
+		Identificador: info.Identificador,
+		Peso:          info.Peso,
+		Nocivo:        info.Nocivo,
+		Timestamp:     stringTime,
+		Grado:         typeData,
+	}
+	_, err := db.Database("redesuao").Collection("basuras").InsertOne(context.TODO(), toSave)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
 }
 
 // // InsertData function
