@@ -1,19 +1,47 @@
 package models
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Datastore interface
 type Datastore interface {
-	GetData() ([]*WeatherInfoRequest, error)
-	InsertData(temp string, humed string) error
+	GetData() ([]*Basura, error)
+	GetDataBy(isUrgent bool) ([]*Basura, error)
+	// InsertData(temp string, humed string) error
 }
 
 // DB database
 type DB struct {
 	*sql.DB
+}
+
+// MDB struct
+type MDB struct {
+	*mongo.Client
+}
+
+// NewMongoClient ok
+func NewMongoClient() (*MDB, error) {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connected to MongoDB!")
+	return &MDB{client}, nil
 }
 
 // NewDB create a connection with a postgressdatabase

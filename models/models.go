@@ -1,7 +1,11 @@
 package models
 
 import (
+	"context"
 	"log"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // WeatherInfoRequest for the struct
@@ -25,71 +29,89 @@ type FullResponse struct {
 	Data   []WeatherInfoRequest `json:"data"`
 }
 
+// Basura struct
+type Basura struct {
+	Identificador string  `json:"identificador"`
+	Peso          float32 `json:"peso"`
+	Gas           float32 `json:"gas"`
+	Timestamp     string  `json:"timestamp"`
+	Grado         string  `json:"grado"`
+}
+
 // GetData function
-func (db *DB) GetData() ([]*WeatherInfoRequest, error) {
-	rows, err := db.Query("SELECT * FROM data")
+func (db *MDB) GetData() ([]*Basura, error) {
+	findOptions := options.Find()
+	cur, err := db.Database("redesuao").Collection("basuras").Find(context.TODO(), bson.D{{}}, findOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer rows.Close()
+	var results []*Basura
+	for cur.Next(context.TODO()) {
 
-	servers := make([]*WeatherInfoRequest, 0)
-	for rows.Next() {
-		server := new(WeatherInfoRequest)
-		err := rows.Scan(&server.ID, &server.Temperatura, &server.Humedad, &server.Fecha)
+		// create a value into which the single document can be decoded
+		var elem Basura
+		err := cur.Decode(&elem)
 		if err != nil {
 			log.Fatal(err)
 		}
-		servers = append(servers, server)
+
+		results = append(results, &elem)
 	}
-	if err = rows.Err(); err != nil {
+	if err := cur.Err(); err != nil {
 		log.Fatal(err)
 	}
-
-	// var allData []WeatherInfoRequest
-	// rows, err := db.Query("SELECT * FROM data")
-	// fmt.Println(rows)
-	// fmt.Println(allData)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// for rows.Next() {
-	// 	if err := rows.Scan(&allData); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }
-
-	// defer rows.Close()
-	// response := FullResponse{
-	// 	Status: "ok",
-	// 	Data:   servers,
-	// }
-	// // iterate over the result and print out the titles
-	// for rows.Next() {
-	// 	var title string
-	// 	if err := rows.Scan(&title); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	fmt.Println(title)
-	// }
-	// if err := rows.Err(); err != nil {
-	// 	log.Fatal(err)
-	// }
-	// return response, err
-	return servers, nil
+	cur.Close(context.TODO())
+	return results, nil
 }
 
-// InsertData function
-func (db *DB) InsertData(temp string, humed string) error {
-	_, err := db.Exec(`
-		INSERT INTO data (temperatura, humedad)  VALUES (
-			$1, $2
-		)
-	`, temp, humed)
-	if err != nil {
-		log.Println(err)
+// GetDataBy function
+func (db *MDB) GetDataBy(isUrgent bool) ([]*Basura, error) {
+	findOptions := options.Find()
+	filter := bson.D{{
+		"grado",
+		bson.D{{
+			"$in",
+			bson.A{"urgente"},
+		}},
+	}}
+	if isUrgent {
+		filter = bson.D{{
+			"grado",
+			bson.D{{
+				"$in",
+				bson.A{"recoger"},
+			}},
+		}}
 	}
+	cur, err := db.Database("redesuao").Collection("basuras").Find(context.TODO(), filter, findOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var results []*Basura
+	for cur.Next(context.TODO()) {
 
-	return nil
+		// create a value into which the single document can be decoded
+		var elem Basura
+		err := cur.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		results = append(results, &elem)
+	}
+	return results, nil
 }
+
+// // InsertData function
+// func (db *MDB) InsertData(temp string, humed string) error {
+// 	_, err := db.Exec(`
+// 		INSERT INTO data (temperatura, humedad)  VALUES (
+// 			$1, $2
+// 		)
+// 	`, temp, humed)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+
+// 	return nil
+// }

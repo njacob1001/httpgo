@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,11 +18,6 @@ const (
 	password = "worker"
 	dbname   = "redesuao"
 )
-
-// DB database
-type DB struct {
-	*sql.DB
-}
 
 // Env estruct
 type Env struct {
@@ -46,7 +40,7 @@ type TotalResponse struct {
 var global Response
 
 func (env *Env) handleGet(w http.ResponseWriter, r *http.Request) {
-	resp, err := env.db.GetData()
+	resp, err := env.db.GetDataBy(false)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -73,18 +67,18 @@ func (env *Env) handlePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	js, err := json.Marshal(global)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	errr := env.db.InsertData(fmt.Sprintf("%f", global.Temperatura), fmt.Sprintf("%f", global.Humedad))
-	if errr != nil {
-		http.Error(w, errr.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
+	// js, err := json.Marshal(global)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	// errr := env.db.InsertData(fmt.Sprintf("%f", global.Temperatura), fmt.Sprintf("%f", global.Humedad))
+	// if errr != nil {
+	// 	http.Error(w, errr.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	// w.Header().Set("Content-Type", "application/json")
+	// w.Write("")
 	return
 }
 
@@ -117,8 +111,8 @@ func (env *Env) handleWeather(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db, err := models.NewDB("postgresql://postgres@localhost:5432/redesuao?password=worker")
-
+	// 	db, err := models.NewDB("postgresql://postgres@localhost:5432/redesuao?password=worker")
+	db, err := models.NewMongoClient()
 	if err != nil {
 		panic(err)
 	}
