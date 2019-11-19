@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -118,6 +119,7 @@ func (db *MDB) InsertData(info *BasuraFromArduino) error {
 	if info.Nocivo || info.Peso > 5000 {
 		typeData = "urgente"
 	} else if info.Peso > 2000 && info.Peso <= 5000 {
+		fmt.Print("Recpger")
 		typeData = "recoger"
 	}
 	toSave := Basura{
