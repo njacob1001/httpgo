@@ -1,0 +1,100 @@
+// package models
+
+// import (
+// 	"context"
+// 	"log"
+// 	"time"
+
+// 	"go.mongodb.org/mongo-driver/bson"
+// 	"go.mongodb.org/mongo-driver/mongo/options"
+// )
+
+// // Articulo struct
+// type Articulo struct {
+// 	ID     string `json:"id"`
+// 	Name   string `json:"name"`
+// 	Precio int64  `json:"precio"`
+// }
+
+// // GetData function
+// func (db *MDB) GetData() ([]*Articulo, error) {
+// 	findOptions := options.Find()
+// 	cur, err := db.Database("uaostore").Collection("productos").Find(context.TODO(), bson.D{{}}, findOptions)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	var results []*Articulo
+// 	for cur.Next(context.TODO()) {
+
+// 		// create a value into which the single document can be decoded
+// 		var elem Articulo
+// 		err := cur.Decode(&elem)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+
+// 		results = append(results, &elem)
+// 	}
+// 	if err := cur.Err(); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	cur.Close(context.TODO())
+// 	return results, nil
+// }
+
+// // GetDataBy function
+// func (db *MDB) GetDataBy(articuloID string) (*Articulo, error) {
+// 	findOptions := options.Find()
+// 	filter := bson.D{{
+// 		"id",
+// 		bson.D{{
+// 			"$in",
+// 			bson.A{articuloID},
+// 		}},
+// 	}}
+// 	var result *Articulo
+// 	err := db.Database("redesuao").Collection("basuras").FindOne(context.TODO(), filter).Decode(&result)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return result, nil
+// }
+
+// // InsertData function
+// func (db *MDB) InsertData(info *BasuraFromArduino) error {
+// 	typeData := "no recoger"
+// 	t := time.Now()
+// 	stringTime := t.Format("2006-01-02T15:04:05-0700")
+// 	if info.Nocivo || info.Peso > 5000 {
+// 		typeData = "urgente"
+// 	} else if info.Peso > 2000 && info.Peso <= 5000 {
+// 		typeData = "recoger"
+// 	}
+// 	toSave := Basura{
+// 		Identificador: info.Identificador,
+// 		Peso:          info.Peso,
+// 		Nocivo:        info.Nocivo,
+// 		Timestamp:     stringTime,
+// 		Grado:         typeData,
+// 	}
+// 	_, err := db.Database("redesuao").Collection("basuras").InsertOne(context.TODO(), toSave)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	return nil
+// }
+
+// // // InsertData function
+// // func (db *MDB) InsertData(temp string, humed string) error {
+// // 	_, err := db.Exec(`
+// // 		INSERT INTO data (temperatura, humedad)  VALUES (
+// // 			$1, $2
+// // 		)
+// // 	`, temp, humed)
+// // 	if err != nil {
+// // 		log.Println(err)
+// // 	}
+
+// // 	return nil
+// // }

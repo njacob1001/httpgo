@@ -1,4 +1,4 @@
-package models
+package databases
 
 import (
 	"context"
@@ -9,24 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// Datastore interface
-type Datastore interface {
-	GetData() ([]*Basura, error)
-	GetDataBy(isUrgent bool) ([]*Basura, error)
-	InsertData(info *BasuraFromArduino) error
-	// InsertData(temp string, humed string) error
-}
-
-// DB database
-type DB struct {
-	*sql.DB
-}
-
-// MDB struct
-type MDB struct {
-	*mongo.Client
-}
 
 // NewMongoClient ok
 func NewMongoClient() (*MDB, error) {
@@ -50,22 +32,22 @@ func NewDB(dataSourceName string) (*DB, error) {
 
 	initializeTable := `
 	CREATE TABLE IF NOT EXISTS
-	data (
+	clients (
 		id SERIAL PRIMARY KEY,
-		temperatura numeric DEFAULT 0.0,
-		humedad numeric DEFAULT 0.0,
-		fecha TIMESTAMP DEFAULT NOW() 
+		cash INT DEFAULT 0,
+		username varchar(40),
+		password varchar(40)
 	)
 `
 
-	defaultValue := `
-	INSERT INTO 
-	data 
-	(temperatura, humedad, fecha) 
-	VALUES 
-	(1.2, 3.4, '2017-03-31 09:30:20-07')
-	ON CONFLICT DO NOTHING
-`
+	// 	defaultValue := `
+	// 	INSERT INTO
+	// 	clients
+	// 	(cash, username, password)
+	// 	VALUES
+	// 	(100000, 'redes', 'redes')
+	// 	ON CONFLICT DO NOTHING
+	// `
 
 	db, err := sql.Open("postgres", dataSourceName)
 	if err != nil {
@@ -78,9 +60,10 @@ func NewDB(dataSourceName string) (*DB, error) {
 		log.Fatal(err)
 		return nil, err
 	}
-	if _, err := db.Exec(defaultValue); err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
+	// if _, err := db.Exec(defaultValue); err != nil {
+	// 	log.Fatal(err)
+	// 	return nil, err
+	// }
+	fmt.Println("Connected to Posgres!")
 	return &DB{db}, nil
 }
