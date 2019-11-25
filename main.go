@@ -89,7 +89,54 @@ func (env *Env) createUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 	return
+}
 
+func (env *Env) validateUser(w http.ResponseWriter, r *http.Request) {
+	var Body routes.UserVerification
+	if err := json.NewDecoder(r.Body).Decode(&Body); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	client, err := env.Psql.GetUser(Body.Username)
+
+	if err != nil {
+		resp := routes.UserAuthResponse{
+			Ok:      false,
+			Message: "hubo un error al buscar el usuario: " + Body.Username,
+		}
+		js, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
+	if client.Cash < 5000 {
+		resp := routes.UserAuthResponse{
+			Ok:      false,
+			Message: "No tiene los fondos suficientes",
+		}
+		js, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
+	resp := routes.UserAuthResponse{
+		Ok: true,
+	}
+	js, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+	return
 }
 
 func main() {
@@ -116,6 +163,7 @@ func main() {
 	}
 	r.Post("/api/user/login", env.loginUser)
 	r.Post("/api/user/create", env.createUser)
+	r.Post("/api/user/validate", env.validateUser)
 	// r.Get("/api/get", env.handleGet)
 	// r.Get("/api/datos/{type}", env.handleGet)
 	// r.Post("/api/insert", env.handlePost)

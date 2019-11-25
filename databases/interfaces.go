@@ -13,4 +13,5 @@ type PostgresInterface interface {
 	UpdateUserCash(username string, cash int64) error
 	AddCash(username string, cash int64) error
 	FindUserByID(username string, password string) (*ClientResponse, error)
+	GetUser(username string) (*ClientResponse, error)
 }

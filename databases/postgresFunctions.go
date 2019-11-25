@@ -57,3 +57,16 @@ func (psql *DB) FindUserByID(username string, password string) (*ClientResponse,
 	}
 	return client, nil
 }
+
+// GetUser func
+func (psql *DB) GetUser(username string) (*ClientResponse, error) {
+	query := fmt.Sprintf("SELECT username, cash FROM clients WHERE username='%s'", username)
+	row := psql.QueryRow(query)
+
+	client := new(ClientResponse)
+	err := row.Scan(&client.Username, &client.Cash)
+	if err != nil {
+		return client, err
+	}
+	return client, nil
+}
