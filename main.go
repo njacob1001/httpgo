@@ -20,6 +20,8 @@ const (
 	dbname   = "uaostore"
 )
 
+var currentClient = "david"
+
 // Env estruct
 type Env struct {
 	Mongo databases.MongoInterface
@@ -139,6 +141,40 @@ func (env *Env) validateUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (env *Env) createSaleRegister(w http.ResponseWriter, r *http.Request) {
+	var Body routes.ArticlesIdentidicators
+	if err := json.NewDecoder(r.Body).Decode(&Body); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	total, err := env.Mongo.CalculateSum(Body.Articles)
+	if err != nil {
+		resp := routes.UserAuthResponse{
+			Ok:      false,
+			Message: "Hubo un error en la consulta de precios",
+		}
+		js, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	}
+	fmt.Println("Descontado: ")
+	fmt.Println(total)
+	env.Psql.AddCash(currentClient, total*-1)
+	resp := routes.UserAuthResponse{
+		Ok: true,
+	}
+	js, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
 func main() {
 	pdb, err := databases.NewDB("postgresql://rysm@localhost:5432/uaostore?password=worker&sslmode=disable")
 	if err != nil {
@@ -164,6 +200,7 @@ func main() {
 	r.Post("/api/user/login", env.loginUser)
 	r.Post("/api/user/create", env.createUser)
 	r.Post("/api/user/validate", env.validateUser)
+	r.Post("/api/user/sale", env.createSaleRegister)
 	// r.Get("/api/get", env.handleGet)
 	// r.Get("/api/datos/{type}", env.handleGet)
 	// r.Post("/api/insert", env.handlePost)

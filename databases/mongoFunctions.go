@@ -2,6 +2,7 @@ package databases
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,7 +19,7 @@ func (mongo *MDB) GetDataByID(articuloID string) (*Product, error) {
 		}},
 	}}
 	var result *Product
-	err := mongo.Database("redesuao").Collection("basuras").FindOne(context.TODO(), filter).Decode(&result)
+	err := mongo.Database("uaostore").Collection("productos").FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,8 @@ func (mongo *MDB) CalculateSum(articles []string) (int64, error) {
 			bson.A{articles},
 		}},
 	}}
-	cur, err := mongo.Database("redesuao").Collection("basuras").Find(context.TODO(), filter, findOptions)
+	cur, err := mongo.Database("uaostore").Collection("productos").Find(context.TODO(), filter, findOptions)
+	fmt.Println(cur)
 	if err != nil {
 		return 0, err
 	}

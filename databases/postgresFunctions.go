@@ -22,7 +22,7 @@ func (psql *DB) CreateUser(username string, password string, cash int64) error {
 
 // UpdateUserCash function
 func (psql *DB) UpdateUserCash(username string, cash int64) error {
-	_, err := psql.Exec("UPDATE clients SET cash=$1 WHERE address=$4", username, cash)
+	_, err := psql.Exec("UPDATE clients SET cash=$2 WHERE username=$1", username, cash)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (psql *DB) AddCash(username string, cash int64) error {
 	if err != nil {
 		return err
 	}
-	_, err2 := psql.Exec("UPDATE clients SET cash=$1 WHERE username=$4", client.Cash+cash, username)
+	_, err2 := psql.Exec("UPDATE clients SET cash=$1 WHERE username=$2", client.Cash+cash, username)
 	if err2 != nil {
 		return err
 	}
