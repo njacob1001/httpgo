@@ -131,6 +131,7 @@ func (env *Env) validateUser(w http.ResponseWriter, r *http.Request) {
 	resp := routes.UserAuthResponse{
 		Ok: true,
 	}
+	currentClient = client.Username
 	js, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
