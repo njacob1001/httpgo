@@ -20,7 +20,7 @@ const (
 	dbname   = "uaostore"
 )
 
-var currentClient = "david"
+var currentClient = "berry"
 
 // Env estruct
 type Env struct {
@@ -162,7 +162,22 @@ func (env *Env) createSaleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Descontado: ")
 	fmt.Println(total)
-	env.Psql.AddCash(currentClient, total*-1)
+	err2 := env.Psql.AddCash(currentClient, total*-1)
+	if err2 != nil {
+		resp := routes.UserAuthResponse{
+			Ok:      false,
+			Message: "Hubo un error en la consulta de precios",
+		}
+		js, err := json.Marshal(resp)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Println(err2)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
 	resp := routes.UserAuthResponse{
 		Ok: true,
 	}
@@ -173,6 +188,7 @@ func (env *Env) createSaleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+	return
 }
 
 func main() {

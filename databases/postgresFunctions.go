@@ -31,7 +31,7 @@ func (psql *DB) UpdateUserCash(username string, cash int64) error {
 
 // AddCash function
 func (psql *DB) AddCash(username string, cash int64) error {
-	query := fmt.Sprintf("SELECT username, cash FROM domains WHERE username='%s'", username)
+	query := fmt.Sprintf("SELECT username, cash FROM clients WHERE username='%s'", username)
 	row := psql.QueryRow(query)
 	client := new(Client)
 	err := row.Scan(&client.Username, &client.Cash)
@@ -42,6 +42,8 @@ func (psql *DB) AddCash(username string, cash int64) error {
 	if err2 != nil {
 		return err
 	}
+	fmt.Println("updated user with")
+	fmt.Println(client.Cash + cash)
 	return nil
 }
 
